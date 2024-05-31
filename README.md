@@ -24,15 +24,16 @@ As respostas devem constar em um repositório no GitHub e o link do repositório
 
 ## Implementação
 
-### 1 - Script para coleta de dados
+### 1 - [Script para coleta de dados](crawler/collect_cat_facts.py)
 
 Este script em Python interage com a API Cat Facts para buscar e salvar fatos sobre vários animais. Os usuários podem escolher entre buscar todos os fatos disponíveis ou um número específico de fatos aleatórios para um tipo de animal específico. Os fatos buscados são então salvos em um arquivo CSV.
 Os fatos serão salvos no caminho 'cat_facts.csv'
 
 **Requisitos:**
 
-- pandas
-- requests
+- Python 3.x
+- requests library
+- pandas library
 
 **Uso:**
 
@@ -42,9 +43,20 @@ Argumentos de Linha de Comando
 python collect_cat_facts.py [-h] [--random] [--type TYPE] [--amount AMOUNT] [--append]
 ```
 
-Opções:
-- ```-h, --help```       Mostra opções de linha de comando.
-- ```--random```         Busca fatos aleatórios.
-- ```--type TYPE```      Define tipo de animal para fato aleatório (o padrão é 'gato').
-- ```--amount AMOUNT```  Define o número de fatos aleatórios a serem buscados (o padrão é 1).
-- ```--append```         Anexar ao arquivo csv, se existir (o padrão substituirá o arquivo).
+**Opções:**
+
+- `-h, --help`       Mostra opções de linha de comando.
+- `--random`         Busca fatos aleatórios.
+- `--type TYPE`      Define tipo de animal para fato aleatório (o padrão é 'gato').
+- `--amount AMOUNT`  Define o número de fatos aleatórios a serem buscados (o padrão é 1).
+- `--append`         Anexar o resultado ao arquivo csv, se existir (o padrão substituirá o arquivo).
+
+**Exemplo de uso:**
+
+Fetch all facts:
+
+`python collect_cat_facts.py`
+
+Fetch 5 random facts for dogs and append to existing csv file:
+
+`python collect_cat_facts.py --type dog --random --amount 5 --append`

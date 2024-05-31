@@ -6,7 +6,7 @@ import pandas as pd
 BASE_URL = "https://cat-fact.herokuapp.com"
 ENDPOINTS = {"all": "/facts", "random": "/facts/random"}
 ANIMALS = ["cat", "dog", "snail", "horse"]
-FILE_PATH = "cat_facts.csv"
+FILE_PATH = "crawler/cat_facts.csv"
 
 
 def is_animal_valid(animal_type):
