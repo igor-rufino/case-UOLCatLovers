@@ -55,8 +55,8 @@ def save_file(facts, append):
                 subset=["_id"], keep="first"
             )
             combined_df.to_csv(FILE_PATH, index=False)
-    else:
-        df.to_csv(FILE_PATH, index=False)
+            return
+    df.to_csv(FILE_PATH, index=False)
 
 
 if __name__ == "__main__":
