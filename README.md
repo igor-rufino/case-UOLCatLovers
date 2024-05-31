@@ -27,6 +27,12 @@ As respostas devem constar em um repositório no GitHub e o link do repositório
 ### 1 - Script para coleta de dados
 
 Este script em Python interage com a API Cat Facts para buscar e salvar fatos sobre vários animais. Os usuários podem escolher entre buscar todos os fatos disponíveis ou um número específico de fatos aleatórios para um tipo de animal específico. Os fatos buscados são então salvos em um arquivo CSV.
+Os fatos serão salvos no caminho 'cat_facts.csv'
+
+**Requisitos:**
+
+- pandas
+- requests
 
 **Uso:**
 
@@ -42,5 +48,3 @@ Opções:
 - ```--type TYPE```      Define tipo de animal para fato aleatório (o padrão é 'gato').
 - ```--amount AMOUNT```  Define o número de fatos aleatórios a serem buscados (o padrão é 1).
 - ```--append```         Anexar ao arquivo csv, se existir (o padrão substituirá o arquivo).
-
-Os fatos serão salvos no arquivo 'cat_facts.csv'
