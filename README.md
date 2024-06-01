@@ -51,12 +51,106 @@ python collect_cat_facts.py [-h] [--random] [--type TYPE] [--amount AMOUNT] [--a
 - `--amount AMOUNT`  Define o número de fatos aleatórios a serem buscados (o padrão é 1).
 - `--append`         Anexar o resultado ao arquivo csv, se existir (o padrão substituirá o arquivo).
 
-**Exemplo de uso:**
+**Exemplos de uso:**
 
-Fetch all facts:
+Coleta todos os fatos:
 
 `python collect_cat_facts.py`
 
-Fetch 5 random facts for dogs and append to existing csv file:
+Coleta 5 fatos aleatórios para cachorros e anexa resultados em um csv existente:
 
 `python collect_cat_facts.py --type dog --random --amount 5 --append`
+
+### 2 - Diagrama de arquitetura em nuvem (GCP)
+
+![Architecture_UOLCatLovers.png](Architecture_UOLCatLovers.png)
+
+**Componentes do Diagrama:**
+
+**External Data Sources (API Cat Facts):**
+O ponto de entrada onde os dados de fatos sobre gatos são extraídos da API Cat Facts.
+
+**Cloud Scheduler:**
+Aciona periodicamente a Cloud Function para iniciar o processo de extração de dados.
+
+**Cloud Functions:**
+Extrai dados da API Cat Facts e armazena em um bucket no Cloud Storage. Também publica uma mensagem no Pub/Sub após a extração.
+
+**Cloud Storage:**
+Armazena temporariamente os arquivos CSV com os dados extraídos.
+
+**Pub/Sub:**
+Gerencia as mensagens publicadas pela Cloud Function, notificando outros serviços de que novos dados estão disponíveis para processamento.
+
+**Dataflow:**
+Consome mensagens do Pub/Sub, lê os dados do Cloud Storage, realiza transformações necessárias e carrega os dados processados no BigQuery.
+
+**BigQuery:**
+Armazena os dados estruturados para que a equipe de analytics possa realizar consultas analíticas.
+
+### 3 - Esquema da tabela de fatos
+
+```
+CREATE TABLE uolcatlovers.dataset.facts (
+    _id STRING NOT NULL,
+    user STRING,
+    text STRING,
+    source STRING,
+    type STRING,
+    createdAt TIMESTAMP,
+    updatedAt TIMESTAMP,
+    deleted BOOLEAN,
+    used BOOLEAN,
+    __v INT64,
+    status STRUCT<
+        verified BOOLEAN,
+        feedback STRING,
+        sentCount INT64
+    >
+)
+PARTITION BY DATE(createdAt);
+```
+
+`PARTITION BY DATE(createdAt)`: A tabela será particionada com base na data extraída do campo createdAt. Cada partição corresponderá a uma data específica, o que ajudará na performace quando fizer consultas filtrando pela data dos fatos.
+
+### 4 - Consulta de dados de agosto de 2020
+
+Consulta que extrai os fatos que foram atualizados em agosto de 2020:
+
+```
+SELECT *
+FROM uolcatlovers.dataset.facts
+WHERE DATE(createdAt) BETWEEN '2020-08-01' AND '2020-08-31';
+```
+
+### 5 - Consulta de dados com amostra aleatória de 10% dos Registros
+
+Consulta para extrair uma amostra aleatória de 10% dos registros, contendo as informações de texto, data de criação e data de atualização:
+
+```
+SELECT text, createdAt, updatedAt
+FROM `uolcatlovers.dataset.facts`
+WHERE RAND() < 0.10;
+```
+
+Para extrair os dados diretamente para um arquivo csv, deve adicionar a instrução [`EXPORT DATA OPTIONS`](https://cloud.google.com/bigquery/docs/reference/standard-sql/other-statements#export_data_statement):
+
+```
+EXPORT DATA OPTIONS(
+  uri='gs://bucket/folder/sample_data.csv',
+  format='CSV',
+  overwrite=true,
+  header=true,
+  field_delimiter=',') AS
+SELECT text, createdAt, updatedAt
+FROM `uolcatlovers.dataset.facts`
+WHERE RAND() < 0.10;
+```
+
+Onde:
+
+- `uri='gs://bucket/folder/sample_data.csv'`: O caminho do Google Cloud Storage onde o arquivo CSV será salvo (caminho genérico como exemplo).
+- `format='CSV'`: Especifica que o formato de saída é CSV.
+- `overwrite=true`: Especifica que se já existir um arquivo com o mesmo nome, ele será sobrescrito.
+- `header=true`: Incluir o cabeçalho (nomes das colunas) no arquivo CSV.
+- `field_delimiter=','`: Usa vírgula como delimitador de campo.
