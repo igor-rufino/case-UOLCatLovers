@@ -101,7 +101,6 @@ CREATE TABLE uolcatlovers.dataset.facts (
     updatedAt TIMESTAMP,
     deleted BOOLEAN,
     used BOOLEAN,
-    __v INT64,
     status STRUCT<
         verified BOOLEAN,
         feedback STRING,
