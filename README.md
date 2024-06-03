@@ -53,11 +53,11 @@ python collect_cat_facts.py [-h] [--random] [--type TYPE] [--amount AMOUNT] [--a
 
 **Exemplos de uso:**
 
-Coleta todos os fatos:
+Coleta todos os fatos, salvando em um arquivo csv (substituindo o arquivo caso já exista):
 
 `python collect_cat_facts.py`
 
-Coleta 5 fatos aleatórios para cachorros e anexa resultados em um csv existente:
+Coleta 5 fatos aleatórios para cachorros, salvando em um arquivo csv (ou anexa resultados no arquivo caso já exista):
 
 `python collect_cat_facts.py --type dog --random --amount 5 --append`
 
@@ -90,46 +90,48 @@ Armazena os dados estruturados para que a equipe de analytics possa realizar con
 
 ### 3 - Esquema da tabela de fatos
 
+Esquema da tabela de fatos no BigQuery baseada no [modelo de fatos da API](https://alexwohlbruck.github.io/cat-facts/docs/models/fact.html).
+
 ```
 CREATE TABLE uolcatlovers.dataset.facts (
     _id STRING NOT NULL,
+    __v INT64,
     user STRING,
     text STRING,
+    updatedAt TIMESTAMP,
+    createdAt TIMESTAMP,
+    deleted BOOLEAN,
     source STRING,
     type STRING,
-    createdAt TIMESTAMP,
-    updatedAt TIMESTAMP,
-    deleted BOOLEAN,
-    used BOOLEAN,
     status STRUCT<
         verified BOOLEAN,
         feedback STRING,
         sentCount INT64
     >
 )
-PARTITION BY DATE(createdAt);
+PARTITION BY DATE(updatedAt);
 ```
 
-`PARTITION BY DATE(createdAt)`: A tabela será particionada com base na data extraída do campo createdAt. Cada partição corresponderá a uma data específica, o que ajudará na performace quando fizer consultas filtrando pela data dos fatos.
+`PARTITION BY DATE(updatedAt)`: A tabela será particionada com base na data extraída do campo updatedAt. Cada partição corresponderá a uma data específica, o que ajudará na performace quando fizer consultas filtrando pela data de atualização dos fatos.
 
-### 4 - Consulta de dados de agosto de 2020
+### 4 - Consulta de dados atualizados em agosto de 2020
 
 Consulta que extrai os fatos que foram atualizados em agosto de 2020:
 
 ```
 SELECT *
 FROM uolcatlovers.dataset.facts
-WHERE DATE(createdAt) BETWEEN '2020-08-01' AND '2020-08-31';
+WHERE DATE(updatedAt) BETWEEN '2020-08-01' AND '2020-08-31';
 ```
 
 ### 5 - Consulta de dados com amostra aleatória de 10% dos Registros
 
-Consulta para extrair uma amostra aleatória de 10% dos registros, contendo as informações de texto, data de criação e data de atualização:
+Consulta para extrair uma [amostra aleatória de 10% dos registros](https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax#tablesample_operator), contendo as informações de texto, data de criação e data de atualização:
 
 ```
 SELECT text, createdAt, updatedAt
 FROM `uolcatlovers.dataset.facts`
-WHERE RAND() < 0.10;
+TABLESAMPLE SYSTEM (10 PERCENT);
 ```
 
 Para extrair os dados diretamente para um arquivo csv, deve adicionar a instrução [`EXPORT DATA OPTIONS`](https://cloud.google.com/bigquery/docs/reference/standard-sql/other-statements#export_data_statement):
@@ -143,7 +145,7 @@ EXPORT DATA OPTIONS(
   field_delimiter=',') AS
 SELECT text, createdAt, updatedAt
 FROM `uolcatlovers.dataset.facts`
-WHERE RAND() < 0.10;
+TABLESAMPLE SYSTEM (10 PERCENT);
 ```
 
 Onde:

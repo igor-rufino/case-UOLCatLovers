@@ -48,6 +48,7 @@ def get_facts():
 
 def save_file(facts, append):
     df = pd.DataFrame(facts)
+    df = df.drop("used", axis=1) # delete column "used" to match the api's fact model
     if append:
         if os.path.exists(FILE_PATH):
             existing_df = pd.read_csv(FILE_PATH)
